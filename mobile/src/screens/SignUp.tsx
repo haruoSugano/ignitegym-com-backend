@@ -4,7 +4,6 @@ import { useNavigation } from "@react-navigation/native";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
-import axios from "axios";
 import { api } from "@services/api";
 
 import LogoSvg from "@assets/logo.svg";
