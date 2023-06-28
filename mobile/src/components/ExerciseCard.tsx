@@ -2,11 +2,15 @@ import { HStack, Heading, Image, Text, VStack, Icon } from "native-base";
 import { TouchableOpacity, TouchableOpacityProps } from "react-native";
 import { Entypo } from "@expo/vector-icons";
 
-type Props = TouchableOpacityProps & {
+import { api } from "@services/api";
 
+import { ExerciseDTO } from "@dtos/ExerciseDTO";
+
+type Props = TouchableOpacityProps & {
+    data: ExerciseDTO;
 };
 
-export function ExerciseCard({ ...rest }: Props) {
+export function ExerciseCard({ data, ...rest }: Props) {
     return (
         <TouchableOpacity {...rest}>
             <HStack
@@ -18,7 +22,7 @@ export function ExerciseCard({ ...rest }: Props) {
                 mb={3}
             >
                 <Image
-                    source={{ uri: "https://www.pontotel.com.br/wp-content/uploads/2021/12/auxilio-academia.webp" }}
+                    source={{ uri: `${api.defaults.baseURL}/exercise/thumb/${data.thumb}` }}
                     alt="Imagem do exercicio"
                     w={16}
                     h={16}
@@ -33,7 +37,7 @@ export function ExerciseCard({ ...rest }: Props) {
                         color="white"
                         fontFamily="heading"
                     >
-                        Remada unilateral
+                        {data.name}
                     </Heading>
 
                     <Text
@@ -42,7 +46,7 @@ export function ExerciseCard({ ...rest }: Props) {
                         mt={1}
                         numberOfLines={2}
                     >
-                        3 séries x 12 repetições
+                        {data.series} séries x {data.repetitions} repetições
                     </Text>
                 </VStack>
 
