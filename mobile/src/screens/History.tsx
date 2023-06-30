@@ -1,20 +1,44 @@
-import { useState } from "react";
-import { VStack, SectionList, Heading, Text } from "native-base";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { VStack, SectionList, Heading, Text, useToast } from "native-base";
 
 import { HistoryCard } from "@components/HistoryCard";
 import { ScreenHeader } from "@components/ScreenHeader";
 
+import { AppError } from "@utils/AppError";
+
+import { api } from "@services/api";
+import { HistoryByDayDTO } from "@dtos/HistoryByDayDTO";
+
 export function History() {
-    const [exercises, setExercises] = useState([
-        {
-            title: "26.08.22",
-            data: ["Puxada frontal", "Remada unilateral"]
-        },
-        {
-            title: "27.08.22",
-            data: ["Puxada frontal",]
+    const [isLoading, setIsLoading] = useState(false);
+    const [exercises, setExercises] = useState<HistoryByDayDTO[]>([]);
+
+    const toast = useToast();
+
+    async function fetchHistory() {
+        try {
+            setIsLoading(true);
+
+            const response = await api.get("/history");
+            setExercises(response.data);
+        } catch (error) {
+            const isAppError = error instanceof AppError;
+            const title = isAppError ? error.message : "Não foi possível carregar o histórico.";
+
+            toast.show({
+                title,
+                placement: "top",
+                bgColor: "red.500"
+            });
+        } finally {
+            setIsLoading(false);
         }
-    ]);
+    }
+
+    useFocusEffect(useCallback(() => {
+        fetchHistory();
+    }, []));
 
     return (
         <VStack flex={1}>
@@ -22,9 +46,11 @@ export function History() {
 
             <SectionList
                 sections={exercises}
-                keyExtractor={item => item}
+                keyExtractor={item => item.id}
                 renderItem={({ item }) => (
-                    <HistoryCard />
+                    <HistoryCard 
+                        data={item}
+                    />
                 )}
                 renderSectionHeader={({ section }) => (
                     <Heading color="gray.100" fontSize="md" fontFamily="heading" mt={10} mb={3}>
