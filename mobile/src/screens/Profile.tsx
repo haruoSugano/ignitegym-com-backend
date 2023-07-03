@@ -12,6 +12,8 @@ import { UserPhoto } from "@components/UserPhoto";
 import { Input } from "@components/Input";
 import { Button } from "@components/Button";
 
+import defaultUserPhotoImg from "@assets/userPhotoDefault.png";
+
 import { useAuth } from "@hooks/useAuth";
 import { AppError } from "@utils/AppError";
 import { api } from "@services/api";
@@ -50,7 +52,6 @@ const profileSchema = yup.object({
 export function Profile() {
     const [isUpdating, setIsUpdating] = useState(false);
     const [photoIsLoading, setPhotoIsLoading] = useState(false);
-    const [userPhoto, setUserPhoto] = useState('https://github.com/haruoSugano.png');
 
     const toast = useToast();
     const { user, updateUserProfile } = useAuth();
@@ -89,7 +90,32 @@ export function Profile() {
                     });
                 }
 
-                setUserPhoto(photoSelected.uri); // atualiza o estado da photo selecionado
+                const fileExtension = photoSelected.uri.split('.').pop();
+
+                const photoProfile = {
+                    name: `${user.name}.${fileExtension}`.toLocaleLowerCase(),
+                    uri: photoSelected.uri,
+                    type: `${photoSelected.type}/${fileExtension}`
+                } as any;
+
+                const userPhotoUploadForm = new FormData();
+                userPhotoUploadForm.append('avatar', photoProfile);
+
+                const avatarUpdatedResponse = await api.patch("/users/avatar", userPhotoUploadForm, {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    }
+                });
+
+                const userUpdated = user;
+                userUpdated.avatar = avatarUpdatedResponse.data.avatar;
+                updateUserProfile(userUpdated);
+
+                toast.show({
+                    title: "Foto atualizada",
+                    placement: "top",
+                    bgColor: "green.500"
+                });
             }
         } catch (error) {
             console.log(error);
@@ -116,7 +142,7 @@ export function Profile() {
             });
         } catch (error) {
             setIsUpdating(false);
-            
+
             const isAppError = error instanceof AppError;
             const title = isAppError ? error.message : "Não foi possível atualizar o perfil. Tente novamente mais tarde";
 
@@ -148,7 +174,7 @@ export function Profile() {
                             :
 
                             <UserPhoto
-                                source={{ uri: userPhoto }}
+                                source={user.avatar ? { uri: `${api.defaults.baseURL}/avatar/${user.avatar}` } : defaultUserPhotoImg}
                                 alt="Foto do usuário"
                                 size={PHOTO_SIZE}
                             />
